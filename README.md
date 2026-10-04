@@ -1,7 +1,7 @@
 # AI-assisted phyphox modules
 
 Custom experiments for the free [phyphox](https://phyphox.org) app, built with AI assistance.
-They accompany the article "[article title]" by David Rakestraw and Praveen Pathak ([journal, year]).
+
 
 ## Install all modules at once
 1. Open phyphox, tap **+** and choose the QR code option.
