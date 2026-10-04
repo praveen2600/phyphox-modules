@@ -8,7 +8,8 @@ They accompany the article "[article title]" by David Rakestraw and Praveen Path
 2. Scan the code below (the phone needs internet).
 3. Tap **save all to collection**.
 
-<img width="540" height="540" alt="qr-all-modules-https" src="https://github.com/user-attachments/assets/e8d18cb4-5e01-4e25-955d-b89bf8384b67" />
+<img width="540" height="540" alt="qr-all-modules" src="https://github.com/user-attachments/assets/0c6b9012-920e-4e00-87f8-5acbef541292" />
+
 
 
 Direct download: [modules.zip](https://raw.githubusercontent.com/praveen2600/phyphox-modules/main/modules.zip)
