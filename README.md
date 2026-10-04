@@ -35,4 +35,5 @@ Direct download: [link to the zip]
 [e.g. CC BY 4.0, free to use and adapt with credit]
 
 ## Contact
-[name, email]
+Praveen Pathak praveen@hbcse.tifr.res.in
+David Rakestraw rakestraw1@llnl.gov
