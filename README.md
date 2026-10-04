@@ -34,7 +34,7 @@ Direct download: [modules.zip](https://raw.githubusercontent.com/praveen2600/phy
 - The heartbeat and PPG modules are for teaching, not medical use.
 
 ## License
-[e.g. CC BY 4.0, free to use and adapt with credit]
+[e.g. CC BY 4.0, free to use and adapt]
 
 ## Contact
 Praveen Pathak praveen@hbcse.tifr.res.in
