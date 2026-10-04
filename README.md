@@ -11,7 +11,7 @@ They accompany the article "[article title]" by David Rakestraw and Praveen Path
 <img width="540" height="540" alt="qr-all-modules-https" src="https://github.com/user-attachments/assets/e8d18cb4-5e01-4e25-955d-b89bf8384b67" />
 
 
-Direct download: [link to the zip]
+Direct download: [modules.zip](https://raw.githubusercontent.com/praveen2600/phyphox-modules/main/modules.zip)
 
 ## Modules
 | Module | What it does |
