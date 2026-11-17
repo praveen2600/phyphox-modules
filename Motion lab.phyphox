@@ -1,0 +1,1784 @@
+<?xml version='1.0' encoding='utf-8'?>
+<phyphox version="1.20" locale="en">
+  <title>Motion Lab</title>
+  <category>HBCSE-LLNL Labs</category>
+  <icon>avx</icon>
+  <color>168AAD</color>
+  <description>Turns the phone into a velocity and displacement meter. Record the phone at rest and then moving; the module removes the sensor offset and integrates acceleration to velocity and displacement (or angular velocity to angle) for any part of the recording. Requires phyphox 1.2.1 or newer.
+
+HOW TO USE
+Keep the phone's orientation fixed. Press Play, hold the phone still for a few seconds, make one short, controlled movement along one axis, hold still again, then pause. Choose the sensor (acceleration without g, acceleration with g, or gyroscope) and the axis. Drag the green slider over the resting part and press Calculate/Remove correction. Drag the blue slider over the movement and enter the initial velocity (0 if the selected part starts at rest). Use Pick data on the graphs to read values. Clear the recording with the trash bin before a new run, and do not integrate across pauses.
+
+THE CORRECTION BUTTON
+One button whose label changes. Calculate/Remove correction: nothing is applied yet (at the start, after the trash bin, or after changing the sensor or axis); pressing it calculates the correction. Remove correction: a correction is applied; pressing it sets the correction to zero, so the drift of the uncorrected signal becomes visible. Calculate correction: shown after removing, or after moving the green slider; pressing it calculates the correction from the green region again. The value below the button shows the correction that is currently applied.
+
+WHAT IS SHOWN
+Upper graph: the raw readings, with the correction region in green and the integration region in blue. Corrected graph: raw minus correction over the blue region; the gray line marks zero. Below it, velocity (or angle for the gyroscope) and displacement (orange line) with the distance along the axis (magenta dots). Velocity starts at the initial velocity you enter; displacement and angle start at zero. These graphs stay empty until a correction has been calculated or removed. The Raw tab shows X, Y, Z and the magnitude of the selected sensor for the whole recording, and the recorded sample rate.
+
+METHOD
+The correction is the mean of the readings in the green region, subtracted once from the original readings. Integration uses the trapezoidal rule with the real timestamps: v[i] = v[i-1] + (a[i-1] + a[i])·Δt/2 and x[i] = x[i-1] + (v[i-1] + v[i])·Δt/2. The distance along the axis integrates the absolute velocity, handling changes of direction correctly; it is not the 3D path length. All sensors run at the fastest rate the phone allows, with no averaging or smoothing. The analysis uses the first 100 s of a recording; the whole recording is kept and exported.
+
+LIMITS
+Any leftover offset grows into drift, linearly in velocity and quadratically in displacement, so keep movements short. Subtracting the resting value removes gravity only while the orientation stays fixed. The axes are fixed to the phone. For the gyroscope, the angle is meaningful only for rotation about one fixed axis, and there is no displacement graph.
+
+Created by Praveen Pathak and David Rakestraw with AI assistance.
+Contact: Praveen Pathak, praveen@hbcse.tifr.res.in
+All modules and updates: https://github.com/praveen2600/phyphox-modules</description><link label="Email the author">mailto:praveen@hbcse.tifr.res.in</link><link label="All modules on GitHub">https://github.com/praveen2600/phyphox-modules</link>
+  <data-containers>
+    <container size="0">t</container>
+    <container size="0">ax</container>
+    <container size="0">ay</container>
+    <container size="0">az</container>
+    <container size="0">gt</container>
+    <container size="0">gx</container>
+    <container size="0">gy</container>
+    <container size="0">gz</container>
+    <container size="0">lt</container>
+    <container size="0">lx</container>
+    <container size="0">ly</container>
+    <container size="0">lz</container>
+    <container size="1" init="3" clearGroup="_">sensor_choice</container>
+    <container size="1" init="1" clearGroup="_">axis</container>
+    <container size="1" init="0">bias_low_pct</container>
+    <container size="1" init="10">bias_high_pct</container>
+    <container size="1" init="0">motion_low_pct</container>
+    <container size="1" init="100">motion_high_pct</container>
+    <container size="1" init="0">v0</container>
+    <container size="1" init="0">cal_request</container>
+    <container size="1" init="0">rm_request</container>
+    <container size="1" init="0">corr_action</container>
+    <container size="1" init="1">next_action</container>
+    <container size="1" init="0">label_code</container>
+    <container size="1">same_low</container>
+    <container size="1">same_high</container>
+    <container size="1">mode_calc</container>
+    <container size="1" init="0">cal_removed</container>
+    <container size="1" init="0">correction_mode</container>
+    <container size="1" init="0">cal_ready</container>
+    <container size="1" init="0">cal_choice</container>
+    <container size="1" init="0">cal_low</container>
+    <container size="1" init="0">cal_high</container>
+    <container size="1" init="0">cal_count</container>
+    <container size="1" init="0">bias_mean</container>
+    <container size="1" init="0">cal_start</container>
+    <container size="1" init="0">cal_end</container>
+    <container size="1" init="0">cal_n</container>
+    <container size="1">signal_choice</container>
+    <container size="1">is_gyro</container>
+    <container size="1">is_acc</container>
+    <container size="0">t_all_acc</container>
+    <container size="0">t_all</container>
+    <container size="0">x_all_acc</container>
+    <container size="0">x_all</container>
+    <container size="0">y_all_acc</container>
+    <container size="0">y_all</container>
+    <container size="0">z_all_acc</container>
+    <container size="0">z_all</container>
+    <container size="0">yz</container>
+    <container size="0">a_all</container>
+    <container size="1">n_all</container>
+    <container size="1">t_first</container>
+    <container size="1">t_last</container>
+    <container size="1">run_duration</container>
+    <container size="1">window_end</container>
+    <container size="0">t_window</container>
+    <container size="0">a_window</container>
+    <container size="1">window_start</container>
+    <container size="1">window_stop</container>
+    <container size="1">window_duration</container>
+    <container size="0">magnitude_all</container>
+    <container size="1">b_low</container>
+    <container size="1">b_high</container>
+    <container size="1">b_lower</container>
+    <container size="1">b_upper</container>
+    <container size="0">b_t</container>
+    <container size="0">b_a</container>
+    <container size="1">b_n</container>
+    <container size="1">b_start</container>
+    <container size="1">b_end</container>
+    <container size="1">b_enough</container>
+    <container size="1">m_low</container>
+    <container size="1">m_high</container>
+    <container size="1">m_lower</container>
+    <container size="1">m_upper</container>
+    <container size="0">m_t</container>
+    <container size="0">m_a</container>
+    <container size="1">m_n</container>
+    <container size="1">m_start</container>
+    <container size="1">m_end</container>
+    <container size="1">m_enough</container>
+    <container size="0" init="100000,10000,1000,100,10,1">time_text_places</container>
+    <container size="1" init="3">time_text_split</container>
+    <container size="0" init="45,45,32,45,32,45,45,32,115">time_text_empty</container>
+    <container size="1">b_start_text_ms</container>
+    <container size="0">b_start_text_digits</container>
+    <container size="0">b_start_text_whole</container>
+    <container size="0">b_start_text_fraction</container>
+    <container size="1">b_end_text_ms</container>
+    <container size="0">b_end_text_digits</container>
+    <container size="0">b_end_text_whole</container>
+    <container size="0">b_end_text_fraction</container>
+    <container size="0">b_time_text_candidate</container>
+    <container size="0">b_time_text</container>
+    <container size="1">m_start_text_ms</container>
+    <container size="0">m_start_text_digits</container>
+    <container size="0">m_start_text_whole</container>
+    <container size="0">m_start_text_fraction</container>
+    <container size="1">m_end_text_ms</container>
+    <container size="0">m_end_text_digits</container>
+    <container size="0">m_end_text_whole</container>
+    <container size="0">m_end_text_fraction</container>
+    <container size="0">m_time_text_candidate</container>
+    <container size="0">m_time_text</container>
+    <container size="1">bias_preview</container>
+    <container size="1">bias_finite_test</container>
+    <container size="1">bias_finite</container>
+    <container size="1">preview_valid</container>
+    <container size="1">choice_difference</container>
+    <container size="1">choice_matches</container>
+    <container size="1">cal_apply</container>
+    <container size="1">bias_valid</container>
+    <container size="1">bias_invalid</container>
+    <container size="1">applied_correction</container>
+    <container size="0">corrected_all</container>
+    <container size="0">corrected_candidate</container>
+    <container size="0">m_zero_y</container>
+    <container size="1">pair_n</container>
+    <container size="0">tl</container>
+    <container size="0">al</container>
+    <container size="0">tr</container>
+    <container size="0">ar</container>
+    <container size="0">dt</container>
+    <container size="1">min_dt</container>
+    <container size="1">time_valid</container>
+    <container size="0">dv</container>
+    <container size="0">dv0</container>
+    <container size="0">dv_sum</container>
+    <container size="1">initial_v</container>
+    <container size="0">v_candidate</container>
+    <container size="1">v_last_candidate</container>
+    <container size="1">integral_finite_test</container>
+    <container size="1">integral_finite</container>
+    <container size="1">valid</container>
+    <container size="1">invalid</container>
+    <container size="1">acc_valid</container>
+    <container size="1">gyro_valid</container>
+    <container size="0">v</container>
+    <container size="0">corrected</container>
+    <container size="0">result_t</container>
+    <container size="1">v_final</container>
+    <container size="0">vl</container>
+    <container size="0">vr</container>
+    <container size="0">dx</container>
+    <container size="0">dx0</container>
+    <container size="0">x_candidate</container>
+    <container size="0">displacement</container>
+    <container size="0">dd</container>
+    <container size="0">dd0</container>
+    <container size="0">distance_candidate</container>
+    <container size="0">distance</container>
+    <container size="1">x_final</container>
+    <container size="1">distance_final</container>
+    <container size="0">acc_result_t</container>
+    <container size="0">velocity_export</container>
+    <container size="0">gyro_result_t</container>
+    <container size="0">angle_export</container>
+    <container size="0">elapsed_t</container>
+    <container size="1">b_plot_min</container>
+    <container size="1">b_plot_max</container>
+    <container size="1">b_plot_pad</container>
+    <container size="1">b_line_lo</container>
+    <container size="1">b_line_hi</container>
+    <container size="0">b_line_y</container>
+    <container size="0">b_lower_candidate</container>
+    <container size="0">b_lower_x</container>
+    <container size="0">b_upper_candidate</container>
+    <container size="0">b_upper_x</container>
+    <container size="1">m_plot_min</container>
+    <container size="1">m_plot_max</container>
+    <container size="1">m_plot_pad</container>
+    <container size="1">m_line_lo</container>
+    <container size="1">m_line_hi</container>
+    <container size="0">m_line_y</container>
+    <container size="0">m_lower_candidate</container>
+    <container size="0">m_lower_x</container>
+    <container size="0">m_upper_candidate</container>
+    <container size="0">m_upper_x</container>
+    <container size="1">zero_start</container>
+    <container size="1">zero_end</container>
+    <container size="0">zero_x_candidate</container>
+    <container size="1">window_n</container>
+    <container size="0">zero_x</container>
+    <container size="0">zero_y</container>
+    <container size="1">recorded_rate</container>
+    <container size="1">has_rate</container>
+    <container size="1">sensor_1</container>
+    <container size="1">sensor_2</container>
+    <container size="1">sensor_3</container>
+    <container size="1">axis_1</container>
+    <container size="1">v_axis_1</container>
+    <container size="1">x_axis_1</container>
+    <container size="1">theta_axis_1</container>
+    <container size="1">axis_2</container>
+    <container size="1">v_axis_2</container>
+    <container size="1">x_axis_2</container>
+    <container size="1">theta_axis_2</container>
+    <container size="1">axis_3</container>
+    <container size="1">v_axis_3</container>
+    <container size="1">x_axis_3</container>
+    <container size="1">theta_axis_3</container>
+    <container size="1">signal_11</container>
+    <container size="1">signal_12</container>
+    <container size="1">signal_13</container>
+    <container size="1">signal_21</container>
+    <container size="1">signal_22</container>
+    <container size="1">signal_23</container>
+    <container size="1">signal_31</container>
+    <container size="1">signal_32</container>
+    <container size="1">signal_33</container>
+  </data-containers>
+  <input>
+    <sensor type="accelerometer" rate="0" rateStrategy="request" average="false" stride="1">
+      <output component="x">ax</output>
+      <output component="y">ay</output>
+      <output component="z">az</output>
+      <output component="t">t</output>
+    </sensor>
+    <sensor type="linear_acceleration" rate="0" rateStrategy="request" average="false" stride="1" ignoreUnavailable="true">
+      <output component="x">lx</output>
+      <output component="y">ly</output>
+      <output component="z">lz</output>
+      <output component="t">lt</output>
+    </sensor>
+    <sensor type="gyroscope" rate="0" rateStrategy="request" average="false" stride="1" ignoreUnavailable="true">
+      <output component="x">gx</output>
+      <output component="y">gy</output>
+      <output component="z">gz</output>
+      <output component="t">gt</output>
+    </sensor>
+  </input>
+  <analysis sleep="0.05">
+    <formula formula="10*[1]+[2]">
+      <input keep="true">sensor_choice</input>
+      <input keep="true">axis</input>
+      <output append="false">signal_choice</output>
+    </formula>
+    <if equal="true">
+      <input keep="true" as="a">sensor_choice</input>
+      <input type="value" as="b">2</input>
+      <input type="value" as="true">1</input>
+      <input type="value" as="false">0</input>
+      <output append="false" as="result">is_gyro</output>
+    </if>
+    <formula formula="1-[1]">
+      <input keep="true">is_gyro</input>
+      <output append="false">is_acc</output>
+    </formula>
+    <if equal="true">
+      <input keep="true" as="a">sensor_choice</input>
+      <input type="value" as="b">3</input>
+      <input keep="true" as="true">lt</input>
+      <input keep="true" as="false">t</input>
+      <output append="false" as="result">t_all_acc</output>
+    </if>
+    <if equal="true">
+      <input keep="true" as="a">sensor_choice</input>
+      <input type="value" as="b">2</input>
+      <input keep="true" as="true">gt</input>
+      <input keep="true" as="false">t_all_acc</input>
+      <output append="false" as="result">t_all</output>
+    </if>
+    <if equal="true">
+      <input keep="true" as="a">sensor_choice</input>
+      <input type="value" as="b">3</input>
+      <input keep="true" as="true">lx</input>
+      <input keep="true" as="false">ax</input>
+      <output append="false" as="result">x_all_acc</output>
+    </if>
+    <if equal="true">
+      <input keep="true" as="a">sensor_choice</input>
+      <input type="value" as="b">2</input>
+      <input keep="true" as="true">gx</input>
+      <input keep="true" as="false">x_all_acc</input>
+      <output append="false" as="result">x_all</output>
+    </if>
+    <if equal="true">
+      <input keep="true" as="a">sensor_choice</input>
+      <input type="value" as="b">3</input>
+      <input keep="true" as="true">ly</input>
+      <input keep="true" as="false">ay</input>
+      <output append="false" as="result">y_all_acc</output>
+    </if>
+    <if equal="true">
+      <input keep="true" as="a">sensor_choice</input>
+      <input type="value" as="b">2</input>
+      <input keep="true" as="true">gy</input>
+      <input keep="true" as="false">y_all_acc</input>
+      <output append="false" as="result">y_all</output>
+    </if>
+    <if equal="true">
+      <input keep="true" as="a">sensor_choice</input>
+      <input type="value" as="b">3</input>
+      <input keep="true" as="true">lz</input>
+      <input keep="true" as="false">az</input>
+      <output append="false" as="result">z_all_acc</output>
+    </if>
+    <if equal="true">
+      <input keep="true" as="a">sensor_choice</input>
+      <input type="value" as="b">2</input>
+      <input keep="true" as="true">gz</input>
+      <input keep="true" as="false">z_all_acc</input>
+      <output append="false" as="result">z_all</output>
+    </if>
+    <if equal="true">
+      <input keep="true" as="a">axis</input>
+      <input type="value" as="b">2</input>
+      <input keep="true" as="true">y_all</input>
+      <input keep="true" as="false">z_all</input>
+      <output append="false" as="result">yz</output>
+    </if>
+    <if equal="true">
+      <input keep="true" as="a">axis</input>
+      <input type="value" as="b">1</input>
+      <input keep="true" as="true">x_all</input>
+      <input keep="true" as="false">yz</input>
+      <output append="false" as="result">a_all</output>
+    </if>
+    <count>
+      <input keep="true">a_all</input>
+      <output append="false">n_all</output>
+    </count>
+    <min>
+      <input keep="true" as="y">t_all</input>
+      <output append="false" as="min">t_first</output>
+    </min>
+    <max>
+      <input keep="true" as="y">t_all</input>
+      <output append="false" as="max">t_last</output>
+    </max>
+    <formula formula="[2]-[1]">
+      <input keep="true">t_first</input>
+      <input keep="true">t_last</input>
+      <output append="false">run_duration</output>
+    </formula>
+    <formula formula="min(100,max(0,[1]))">
+      <input keep="true">t_last</input>
+      <output append="false">window_end</output>
+    </formula>
+    <rangefilter>
+      <input keep="true" as="in">t_all</input>
+      <input type="value" as="min">0</input>
+      <input keep="true" as="max">window_end</input>
+      <input keep="true" as="in">a_all</input>
+      <output append="false" as="out">t_window</output>
+      <output append="false" as="out">a_window</output>
+    </rangefilter>
+    <min>
+      <input keep="true" as="y">t_window</input>
+      <output append="false" as="min">window_start</output>
+    </min>
+    <max>
+      <input keep="true" as="y">t_window</input>
+      <output append="false" as="max">window_stop</output>
+    </max>
+    <formula formula="max(0,[2]-[1])">
+      <input keep="true">window_start</input>
+      <input keep="true">window_stop</input>
+      <output append="false">window_duration</output>
+    </formula>
+    <formula formula="sqrt([1_]^2+[2_]^2+[3_]^2)">
+      <input keep="true">x_all</input>
+      <input keep="true">y_all</input>
+      <input keep="true">z_all</input>
+      <output append="false">magnitude_all</output>
+    </formula>
+    <formula formula="max(0,min(100,min([1],[2])))">
+      <input keep="true">bias_low_pct</input>
+      <input keep="true">bias_high_pct</input>
+      <output append="false">b_low</output>
+    </formula>
+    <formula formula="max(0,min(100,max([1],[2])))">
+      <input keep="true">bias_low_pct</input>
+      <input keep="true">bias_high_pct</input>
+      <output append="false">b_high</output>
+    </formula>
+    <formula formula="[1]*(1-[3]/100)+[2]*([3]/100)">
+      <input keep="true">window_start</input>
+      <input keep="true">window_stop</input>
+      <input keep="true">b_low</input>
+      <output append="false">b_lower</output>
+    </formula>
+    <formula formula="[1]*(1-[3]/100)+[2]*([3]/100)">
+      <input keep="true">window_start</input>
+      <input keep="true">window_stop</input>
+      <input keep="true">b_high</input>
+      <output append="false">b_upper</output>
+    </formula>
+    <rangefilter>
+      <input keep="true" as="in">t_window</input>
+      <input keep="true" as="min">b_lower</input>
+      <input keep="true" as="max">b_upper</input>
+      <input keep="true" as="in">a_window</input>
+      <output append="false" as="out">b_t</output>
+      <output append="false" as="out">b_a</output>
+    </rangefilter>
+    <count>
+      <input keep="true">b_a</input>
+      <output append="false">b_n</output>
+    </count>
+    <min>
+      <input keep="true" as="y">b_t</input>
+      <output append="false" as="min">b_start</output>
+    </min>
+    <max>
+      <input keep="true" as="y">b_t</input>
+      <output append="false" as="max">b_end</output>
+    </max>
+    <if greater="true">
+      <input keep="true" as="a">b_n</input>
+      <input type="value" as="b">1</input>
+      <input type="value" as="true">1</input>
+      <input type="value" as="false">0</input>
+      <output append="false" as="result">b_enough</output>
+    </if>
+    <formula formula="max(0,min(100,min([1],[2])))">
+      <input keep="true">motion_low_pct</input>
+      <input keep="true">motion_high_pct</input>
+      <output append="false">m_low</output>
+    </formula>
+    <formula formula="max(0,min(100,max([1],[2])))">
+      <input keep="true">motion_low_pct</input>
+      <input keep="true">motion_high_pct</input>
+      <output append="false">m_high</output>
+    </formula>
+    <formula formula="[1]*(1-[3]/100)+[2]*([3]/100)">
+      <input keep="true">window_start</input>
+      <input keep="true">window_stop</input>
+      <input keep="true">m_low</input>
+      <output append="false">m_lower</output>
+    </formula>
+    <formula formula="[1]*(1-[3]/100)+[2]*([3]/100)">
+      <input keep="true">window_start</input>
+      <input keep="true">window_stop</input>
+      <input keep="true">m_high</input>
+      <output append="false">m_upper</output>
+    </formula>
+    <rangefilter>
+      <input keep="true" as="in">t_window</input>
+      <input keep="true" as="min">m_lower</input>
+      <input keep="true" as="max">m_upper</input>
+      <input keep="true" as="in">a_window</input>
+      <output append="false" as="out">m_t</output>
+      <output append="false" as="out">m_a</output>
+    </rangefilter>
+    <count>
+      <input keep="true">m_a</input>
+      <output append="false">m_n</output>
+    </count>
+    <min>
+      <input keep="true" as="y">m_t</input>
+      <output append="false" as="min">m_start</output>
+    </min>
+    <max>
+      <input keep="true" as="y">m_t</input>
+      <output append="false" as="max">m_end</output>
+    </max>
+    <if greater="true">
+      <input keep="true" as="a">m_n</input>
+      <input type="value" as="b">1</input>
+      <input type="value" as="true">1</input>
+      <input type="value" as="false">0</input>
+      <output append="false" as="result">m_enough</output>
+    </if>
+    <formula formula="floor(max(0,min(100,[1]))*1000+0.5)">
+      <input keep="true">b_start</input>
+      <output append="false">b_start_text_ms</output>
+    </formula>
+    <formula formula="(48+floor([1]/[2_])-10*floor([1]/(10*[2_])))*min(1,max(0,floor([1]/[2_])+min(1,floor(1000/[2_]))))">
+      <input keep="true">b_start_text_ms</input>
+      <input keep="true">time_text_places</input>
+      <output append="false">b_start_text_digits</output>
+    </formula>
+    <subrange>
+      <input type="value" as="from">0</input>
+      <input keep="true" as="length">time_text_split</input>
+      <input keep="true" as="in">b_start_text_digits</input>
+      <output append="false" as="out">b_start_text_whole</output>
+    </subrange>
+    <subrange>
+      <input type="value" as="from">3</input>
+      <input keep="true" as="in">b_start_text_digits</input>
+      <output append="false" as="out">b_start_text_fraction</output>
+    </subrange>
+    <formula formula="floor(max(0,min(100,[1]))*1000+0.5)">
+      <input keep="true">b_end</input>
+      <output append="false">b_end_text_ms</output>
+    </formula>
+    <formula formula="(48+floor([1]/[2_])-10*floor([1]/(10*[2_])))*min(1,max(0,floor([1]/[2_])+min(1,floor(1000/[2_]))))">
+      <input keep="true">b_end_text_ms</input>
+      <input keep="true">time_text_places</input>
+      <output append="false">b_end_text_digits</output>
+    </formula>
+    <subrange>
+      <input type="value" as="from">0</input>
+      <input keep="true" as="length">time_text_split</input>
+      <input keep="true" as="in">b_end_text_digits</input>
+      <output append="false" as="out">b_end_text_whole</output>
+    </subrange>
+    <subrange>
+      <input type="value" as="from">3</input>
+      <input keep="true" as="in">b_end_text_digits</input>
+      <output append="false" as="out">b_end_text_fraction</output>
+    </subrange>
+    <append>
+      <input keep="true" as="in">b_start_text_whole</input>
+      <input type="value" as="in">46</input>
+      <input keep="true" as="in">b_start_text_fraction</input>
+      <input type="value" as="in">32</input>
+      <input type="value" as="in">45</input>
+      <input type="value" as="in">32</input>
+      <input keep="true" as="in">b_end_text_whole</input>
+      <input type="value" as="in">46</input>
+      <input keep="true" as="in">b_end_text_fraction</input>
+      <input type="value" as="in">32</input>
+      <input type="value" as="in">115</input>
+      <output append="false">b_time_text_candidate</output>
+    </append>
+    <if greater="true">
+      <input keep="true" as="a">b_n</input>
+      <input type="value" as="b">0</input>
+      <input keep="true" as="true">b_time_text_candidate</input>
+      <input keep="true" as="false">time_text_empty</input>
+      <output append="false" as="result">b_time_text</output>
+    </if>
+    <formula formula="floor(max(0,min(100,[1]))*1000+0.5)">
+      <input keep="true">m_start</input>
+      <output append="false">m_start_text_ms</output>
+    </formula>
+    <formula formula="(48+floor([1]/[2_])-10*floor([1]/(10*[2_])))*min(1,max(0,floor([1]/[2_])+min(1,floor(1000/[2_]))))">
+      <input keep="true">m_start_text_ms</input>
+      <input keep="true">time_text_places</input>
+      <output append="false">m_start_text_digits</output>
+    </formula>
+    <subrange>
+      <input type="value" as="from">0</input>
+      <input keep="true" as="length">time_text_split</input>
+      <input keep="true" as="in">m_start_text_digits</input>
+      <output append="false" as="out">m_start_text_whole</output>
+    </subrange>
+    <subrange>
+      <input type="value" as="from">3</input>
+      <input keep="true" as="in">m_start_text_digits</input>
+      <output append="false" as="out">m_start_text_fraction</output>
+    </subrange>
+    <formula formula="floor(max(0,min(100,[1]))*1000+0.5)">
+      <input keep="true">m_end</input>
+      <output append="false">m_end_text_ms</output>
+    </formula>
+    <formula formula="(48+floor([1]/[2_])-10*floor([1]/(10*[2_])))*min(1,max(0,floor([1]/[2_])+min(1,floor(1000/[2_]))))">
+      <input keep="true">m_end_text_ms</input>
+      <input keep="true">time_text_places</input>
+      <output append="false">m_end_text_digits</output>
+    </formula>
+    <subrange>
+      <input type="value" as="from">0</input>
+      <input keep="true" as="length">time_text_split</input>
+      <input keep="true" as="in">m_end_text_digits</input>
+      <output append="false" as="out">m_end_text_whole</output>
+    </subrange>
+    <subrange>
+      <input type="value" as="from">3</input>
+      <input keep="true" as="in">m_end_text_digits</input>
+      <output append="false" as="out">m_end_text_fraction</output>
+    </subrange>
+    <append>
+      <input keep="true" as="in">m_start_text_whole</input>
+      <input type="value" as="in">46</input>
+      <input keep="true" as="in">m_start_text_fraction</input>
+      <input type="value" as="in">32</input>
+      <input type="value" as="in">45</input>
+      <input type="value" as="in">32</input>
+      <input keep="true" as="in">m_end_text_whole</input>
+      <input type="value" as="in">46</input>
+      <input keep="true" as="in">m_end_text_fraction</input>
+      <input type="value" as="in">32</input>
+      <input type="value" as="in">115</input>
+      <output append="false">m_time_text_candidate</output>
+    </append>
+    <if greater="true">
+      <input keep="true" as="a">m_n</input>
+      <input type="value" as="b">0</input>
+      <input keep="true" as="true">m_time_text_candidate</input>
+      <input keep="true" as="false">time_text_empty</input>
+      <output append="false" as="result">m_time_text</output>
+    </if>
+    <average>
+      <input keep="true" as="buffer">b_a</input>
+      <output append="false" as="average">bias_preview</output>
+    </average>
+    <formula formula="[1]-[1]">
+      <input keep="true">bias_preview</input>
+      <output append="false">bias_finite_test</output>
+    </formula>
+    <if equal="true">
+      <input keep="true" as="a">bias_finite_test</input>
+      <input type="value" as="b">0</input>
+      <input type="value" as="true">1</input>
+      <input type="value" as="false">0</input>
+      <output append="false" as="result">bias_finite</output>
+    </if>
+    <formula formula="[1]*[2]">
+      <input keep="true">b_enough</input>
+      <input keep="true">bias_finite</input>
+      <output append="false">preview_valid</output>
+    </formula>
+    <formula formula="abs([1]-[2])">
+      <input keep="true">signal_choice</input>
+      <input keep="true">cal_choice</input>
+      <output append="false">choice_difference</output>
+    </formula>
+    <if equal="true">
+      <input keep="true" as="a">choice_difference</input>
+      <input type="value" as="b">0</input>
+      <input type="value" as="true">1</input>
+      <input type="value" as="false">0</input>
+      <output append="false" as="result">choice_matches</output>
+    </if>
+    <if equal="true">
+      <input keep="true" as="a">choice_matches</input>
+      <input type="value" as="b">0</input>
+      <input type="value" as="true">0</input>
+      <output append="false" as="result">cal_ready</output>
+    </if>
+    <if equal="true">
+      <input keep="true" as="a">corr_action</input>
+      <input type="value" as="b">1</input>
+      <input type="value" as="true">1</input>
+      <input type="value" as="false">0</input>
+      <output append="false" as="result">cal_request</output>
+    </if>
+    <if equal="true">
+      <input keep="true" as="a">corr_action</input>
+      <input type="value" as="b">2</input>
+      <input type="value" as="true">1</input>
+      <input type="value" as="false">0</input>
+      <output append="false" as="result">rm_request</output>
+    </if>
+    <formula formula="[1]*[2]">
+      <input keep="true">cal_request</input>
+      <input keep="true">preview_valid</input>
+      <output append="false">cal_apply</output>
+    </formula>
+    <if equal="true">
+      <input keep="true" as="a">cal_apply</input>
+      <input type="value" as="b">1</input>
+      <input keep="true" as="true">bias_preview</input>
+      <output append="false" as="result">bias_mean</output>
+    </if>
+    <if equal="true">
+      <input keep="true" as="a">cal_apply</input>
+      <input type="value" as="b">1</input>
+      <input keep="true" as="true">signal_choice</input>
+      <output append="false" as="result">cal_choice</output>
+    </if>
+    <if equal="true">
+      <input keep="true" as="a">cal_apply</input>
+      <input type="value" as="b">1</input>
+      <input keep="true" as="true">b_low</input>
+      <output append="false" as="result">cal_low</output>
+    </if>
+    <if equal="true">
+      <input keep="true" as="a">cal_apply</input>
+      <input type="value" as="b">1</input>
+      <input keep="true" as="true">b_high</input>
+      <output append="false" as="result">cal_high</output>
+    </if>
+    <if equal="true">
+      <input keep="true" as="a">cal_apply</input>
+      <input type="value" as="b">1</input>
+      <input keep="true" as="true">n_all</input>
+      <output append="false" as="result">cal_count</output>
+    </if>
+    <if equal="true">
+      <input keep="true" as="a">cal_apply</input>
+      <input type="value" as="b">1</input>
+      <input keep="true" as="true">b_start</input>
+      <output append="false" as="result">cal_start</output>
+    </if>
+    <if equal="true">
+      <input keep="true" as="a">cal_apply</input>
+      <input type="value" as="b">1</input>
+      <input keep="true" as="true">b_end</input>
+      <output append="false" as="result">cal_end</output>
+    </if>
+    <if equal="true">
+      <input keep="true" as="a">cal_apply</input>
+      <input type="value" as="b">1</input>
+      <input keep="true" as="true">b_n</input>
+      <output append="false" as="result">cal_n</output>
+    </if>
+    <if equal="true">
+      <input keep="true" as="a">cal_apply</input>
+      <input type="value" as="b">1</input>
+      <input type="value" as="true">1</input>
+      <output append="false" as="result">cal_ready</output>
+    </if>
+    <if equal="true">
+      <input keep="true" as="a">cal_apply</input>
+      <input type="value" as="b">1</input>
+      <input type="value" as="true">0</input>
+      <output append="false" as="result">cal_removed</output>
+    </if>
+    <if equal="true">
+      <input keep="true" as="a">rm_request</input>
+      <input type="value" as="b">1</input>
+      <input type="value" as="true">0</input>
+      <output append="false" as="result">bias_mean</output>
+    </if>
+    <if equal="true">
+      <input keep="true" as="a">rm_request</input>
+      <input type="value" as="b">1</input>
+      <input keep="true" as="true">signal_choice</input>
+      <output append="false" as="result">cal_choice</output>
+    </if>
+    <if equal="true">
+      <input keep="true" as="a">rm_request</input>
+      <input type="value" as="b">1</input>
+      <input type="value" as="true">0</input>
+      <output append="false" as="result">cal_low</output>
+    </if>
+    <if equal="true">
+      <input keep="true" as="a">rm_request</input>
+      <input type="value" as="b">1</input>
+      <input type="value" as="true">0</input>
+      <output append="false" as="result">cal_high</output>
+    </if>
+    <if equal="true">
+      <input keep="true" as="a">rm_request</input>
+      <input type="value" as="b">1</input>
+      <input type="value" as="true">0</input>
+      <output append="false" as="result">cal_start</output>
+    </if>
+    <if equal="true">
+      <input keep="true" as="a">rm_request</input>
+      <input type="value" as="b">1</input>
+      <input type="value" as="true">0</input>
+      <output append="false" as="result">cal_end</output>
+    </if>
+    <if equal="true">
+      <input keep="true" as="a">rm_request</input>
+      <input type="value" as="b">1</input>
+      <input type="value" as="true">0</input>
+      <output append="false" as="result">cal_n</output>
+    </if>
+    <if equal="true">
+      <input keep="true" as="a">rm_request</input>
+      <input type="value" as="b">1</input>
+      <input type="value" as="true">1</input>
+      <output append="false" as="result">cal_removed</output>
+    </if>
+    <if equal="true">
+      <input keep="true" as="a">rm_request</input>
+      <input type="value" as="b">1</input>
+      <input type="value" as="true">1</input>
+      <output append="false" as="result">cal_ready</output>
+    </if>
+    <formula formula="[1]">
+      <input keep="true">cal_ready</input>
+      <output append="false">bias_valid</output>
+    </formula>
+    <formula formula="1-[1]">
+      <input keep="true">bias_valid</input>
+      <output append="false">bias_invalid</output>
+    </formula>
+    <formula formula="[1]*(1+[2])">
+      <input keep="true">bias_valid</input>
+      <input keep="true">cal_removed</input>
+      <output append="false">correction_mode</output>
+    </formula>
+    <formula formula="0">
+      <output append="false">cal_request</output>
+    </formula>
+    <formula formula="0">
+      <output append="false">rm_request</output>
+    </formula>
+    <formula formula="0">
+      <output append="false">corr_action</output>
+    </formula>
+    <if equal="true">
+      <input keep="true" as="a">b_low</input>
+      <input keep="true" as="b">cal_low</input>
+      <input type="value" as="true">1</input>
+      <input type="value" as="false">0</input>
+      <output append="false" as="result">same_low</output>
+    </if>
+    <if equal="true">
+      <input keep="true" as="a">b_high</input>
+      <input keep="true" as="b">cal_high</input>
+      <input type="value" as="true">1</input>
+      <input type="value" as="false">0</input>
+      <output append="false" as="result">same_high</output>
+    </if>
+    <if equal="true">
+      <input keep="true" as="a">correction_mode</input>
+      <input type="value" as="b">1</input>
+      <input type="value" as="true">1</input>
+      <input type="value" as="false">0</input>
+      <output append="false" as="result">mode_calc</output>
+    </if>
+    <formula formula="1+[1]*[2]*[3]">
+      <input keep="true">mode_calc</input>
+      <input keep="true">same_low</input>
+      <input keep="true">same_high</input>
+      <output append="false">next_action</output>
+    </formula>
+    <if equal="true">
+      <input keep="true" as="a">correction_mode</input>
+      <input type="value" as="b">0</input>
+      <input type="value" as="true">0</input>
+      <input keep="true" as="false">next_action</input>
+      <output append="false" as="result">label_code</output>
+    </if>
+    <if equal="true">
+      <input keep="true" as="a">bias_valid</input>
+      <input type="value" as="b">1</input>
+      <input keep="true" as="true">bias_mean</input>
+      <input type="value" as="false">0</input>
+      <output append="false" as="result">applied_correction</output>
+    </if>
+    <formula formula="[1_]-[2]">
+      <input keep="true">a_window</input>
+      <input keep="true">applied_correction</input>
+      <output append="false">corrected_all</output>
+    </formula>
+    <formula formula="[1_]-[2]">
+      <input keep="true">m_a</input>
+      <input keep="true">applied_correction</input>
+      <output append="false">corrected_candidate</output>
+    </formula>
+    <formula formula="0*[1_]">
+      <input keep="true">m_t</input>
+      <output append="false">m_zero_y</output>
+    </formula>
+    <formula formula="max(0,[1]-1)">
+      <input keep="true">m_n</input>
+      <output append="false">pair_n</output>
+    </formula>
+    <subrange>
+      <input type="value" as="from">0</input>
+      <input keep="true" as="length">pair_n</input>
+      <input keep="true" as="in">m_t</input>
+      <input keep="true" as="in">corrected_candidate</input>
+      <output append="false" as="out">tl</output>
+      <output append="false" as="out">al</output>
+    </subrange>
+    <subrange>
+      <input type="value" as="from">1</input>
+      <input keep="true" as="in">m_t</input>
+      <input keep="true" as="in">corrected_candidate</input>
+      <output append="false" as="out">tr</output>
+      <output append="false" as="out">ar</output>
+    </subrange>
+    <formula formula="[2_]-[1_]">
+      <input keep="true">tl</input>
+      <input keep="true">tr</input>
+      <output append="false">dt</output>
+    </formula>
+    <min>
+      <input keep="true" as="y">dt</input>
+      <output append="false" as="min">min_dt</output>
+    </min>
+    <if greater="true">
+      <input keep="true" as="a">min_dt</input>
+      <input type="value" as="b">0</input>
+      <input type="value" as="true">1</input>
+      <input type="value" as="false">0</input>
+      <output append="false" as="result">time_valid</output>
+    </if>
+    <formula formula="([1_]+[2_])*[3_]/2">
+      <input keep="true">al</input>
+      <input keep="true">ar</input>
+      <input keep="true">dt</input>
+      <output append="false">dv</output>
+    </formula>
+    <append>
+      <input type="value" as="in">0</input>
+      <input keep="true" as="in">dv</input>
+      <output append="false">dv0</output>
+    </append>
+    <integrate>
+      <input keep="true">dv0</input>
+      <output append="false">dv_sum</output>
+    </integrate>
+    <if equal="true">
+      <input keep="true" as="a">is_gyro</input>
+      <input type="value" as="b">1</input>
+      <input type="value" as="true">0</input>
+      <input keep="true" as="false">v0</input>
+      <output append="false" as="result">initial_v</output>
+    </if>
+    <formula formula="[1_]+[2]">
+      <input keep="true">dv_sum</input>
+      <input keep="true">initial_v</input>
+      <output append="false">v_candidate</output>
+    </formula>
+    <formula formula="[1]">
+      <input keep="true">v_candidate</input>
+      <output append="false">v_last_candidate</output>
+    </formula>
+    <formula formula="[1]-[1]">
+      <input keep="true">v_last_candidate</input>
+      <output append="false">integral_finite_test</output>
+    </formula>
+    <if equal="true">
+      <input keep="true" as="a">integral_finite_test</input>
+      <input type="value" as="b">0</input>
+      <input type="value" as="true">1</input>
+      <input type="value" as="false">0</input>
+      <output append="false" as="result">integral_finite</output>
+    </if>
+    <formula formula="[1]*[2]*[3]*[4]">
+      <input keep="true">bias_valid</input>
+      <input keep="true">m_enough</input>
+      <input keep="true">time_valid</input>
+      <input keep="true">integral_finite</input>
+      <output append="false">valid</output>
+    </formula>
+    <formula formula="1-[1]">
+      <input keep="true">valid</input>
+      <output append="false">invalid</output>
+    </formula>
+    <formula formula="[1]*[2]">
+      <input keep="true">valid</input>
+      <input keep="true">is_acc</input>
+      <output append="false">acc_valid</output>
+    </formula>
+    <formula formula="[1]*[2]">
+      <input keep="true">valid</input>
+      <input keep="true">is_gyro</input>
+      <output append="false">gyro_valid</output>
+    </formula>
+    <if equal="true">
+      <input keep="true" as="a">valid</input>
+      <input type="value" as="b">1</input>
+      <input keep="true" as="true">v_candidate</input>
+      <input type="empty" as="false" />
+      <output append="false" as="result">v</output>
+    </if>
+    <if equal="true">
+      <input keep="true" as="a">valid</input>
+      <input type="value" as="b">1</input>
+      <input keep="true" as="true">corrected_candidate</input>
+      <input type="empty" as="false" />
+      <output append="false" as="result">corrected</output>
+    </if>
+    <if equal="true">
+      <input keep="true" as="a">valid</input>
+      <input type="value" as="b">1</input>
+      <input keep="true" as="true">m_t</input>
+      <input type="empty" as="false" />
+      <output append="false" as="result">result_t</output>
+    </if>
+    <formula formula="[1]">
+      <input keep="true">v</input>
+      <output append="false">v_final</output>
+    </formula>
+    <subrange>
+      <input type="value" as="from">0</input>
+      <input keep="true" as="length">pair_n</input>
+      <input keep="true" as="in">v_candidate</input>
+      <output append="false" as="out">vl</output>
+    </subrange>
+    <subrange>
+      <input type="value" as="from">1</input>
+      <input keep="true" as="in">v_candidate</input>
+      <output append="false" as="out">vr</output>
+    </subrange>
+    <formula formula="([1_]+[2_])*[3_]/2">
+      <input keep="true">vl</input>
+      <input keep="true">vr</input>
+      <input keep="true">dt</input>
+      <output append="false">dx</output>
+    </formula>
+    <append>
+      <input type="value" as="in">0</input>
+      <input keep="true" as="in">dx</input>
+      <output append="false">dx0</output>
+    </append>
+    <integrate>
+      <input keep="true">dx0</input>
+      <output append="false">x_candidate</output>
+    </integrate>
+    <if equal="true">
+      <input keep="true" as="a">acc_valid</input>
+      <input type="value" as="b">1</input>
+      <input keep="true" as="true">x_candidate</input>
+      <input type="empty" as="false" />
+      <output append="false" as="result">displacement</output>
+    </if>
+    <formula formula="[3_]*((abs([1_])+abs([2_]))/2-max(0,-[1_]*[2_])/max(1e-30,abs([1_])+abs([2_])))">
+      <input keep="true">vl</input>
+      <input keep="true">vr</input>
+      <input keep="true">dt</input>
+      <output append="false">dd</output>
+    </formula>
+    <append>
+      <input type="value" as="in">0</input>
+      <input keep="true" as="in">dd</input>
+      <output append="false">dd0</output>
+    </append>
+    <integrate>
+      <input keep="true">dd0</input>
+      <output append="false">distance_candidate</output>
+    </integrate>
+    <if equal="true">
+      <input keep="true" as="a">acc_valid</input>
+      <input type="value" as="b">1</input>
+      <input keep="true" as="true">distance_candidate</input>
+      <input type="empty" as="false" />
+      <output append="false" as="result">distance</output>
+    </if>
+    <formula formula="[1]">
+      <input keep="true">displacement</input>
+      <output append="false">x_final</output>
+    </formula>
+    <formula formula="[1]">
+      <input keep="true">distance</input>
+      <output append="false">distance_final</output>
+    </formula>
+    <if equal="true">
+      <input keep="true" as="a">acc_valid</input>
+      <input type="value" as="b">1</input>
+      <input keep="true" as="true">result_t</input>
+      <input type="empty" as="false" />
+      <output append="false" as="result">acc_result_t</output>
+    </if>
+    <if equal="true">
+      <input keep="true" as="a">acc_valid</input>
+      <input type="value" as="b">1</input>
+      <input keep="true" as="true">v</input>
+      <input type="empty" as="false" />
+      <output append="false" as="result">velocity_export</output>
+    </if>
+    <if equal="true">
+      <input keep="true" as="a">gyro_valid</input>
+      <input type="value" as="b">1</input>
+      <input keep="true" as="true">result_t</input>
+      <input type="empty" as="false" />
+      <output append="false" as="result">gyro_result_t</output>
+    </if>
+    <if equal="true">
+      <input keep="true" as="a">gyro_valid</input>
+      <input type="value" as="b">1</input>
+      <input keep="true" as="true">v</input>
+      <input type="empty" as="false" />
+      <output append="false" as="result">angle_export</output>
+    </if>
+    <formula formula="[1_]-[2]">
+      <input keep="true">m_t</input>
+      <input keep="true">m_start</input>
+      <output append="false">elapsed_t</output>
+    </formula>
+    <min>
+      <input keep="true" as="y">a_window</input>
+      <output append="false" as="min">b_plot_min</output>
+    </min>
+    <max>
+      <input keep="true" as="y">a_window</input>
+      <output append="false" as="max">b_plot_max</output>
+    </max>
+    <formula formula="max(0.001,([2]-[1])*0.04)">
+      <input keep="true">b_plot_min</input>
+      <input keep="true">b_plot_max</input>
+      <output append="false">b_plot_pad</output>
+    </formula>
+    <formula formula="[1]-[2]">
+      <input keep="true">b_plot_min</input>
+      <input keep="true">b_plot_pad</input>
+      <output append="false">b_line_lo</output>
+    </formula>
+    <formula formula="[1]+[2]">
+      <input keep="true">b_plot_max</input>
+      <input keep="true">b_plot_pad</input>
+      <output append="false">b_line_hi</output>
+    </formula>
+    <append>
+      <input keep="true" as="in">b_line_lo</input>
+      <input keep="true" as="in">b_line_hi</input>
+      <output append="false">b_line_y</output>
+    </append>
+    <append>
+      <input keep="true" as="in">b_start</input>
+      <input keep="true" as="in">b_start</input>
+      <output append="false">b_lower_candidate</output>
+    </append>
+    <if greater="true">
+      <input keep="true" as="a">b_n</input>
+      <input type="value" as="b">0</input>
+      <input keep="true" as="true">b_lower_candidate</input>
+      <input type="empty" as="false" />
+      <output append="false" as="result">b_lower_x</output>
+    </if>
+    <append>
+      <input keep="true" as="in">b_end</input>
+      <input keep="true" as="in">b_end</input>
+      <output append="false">b_upper_candidate</output>
+    </append>
+    <if greater="true">
+      <input keep="true" as="a">b_n</input>
+      <input type="value" as="b">0</input>
+      <input keep="true" as="true">b_upper_candidate</input>
+      <input type="empty" as="false" />
+      <output append="false" as="result">b_upper_x</output>
+    </if>
+    <min>
+      <input keep="true" as="y">a_window</input>
+      <output append="false" as="min">m_plot_min</output>
+    </min>
+    <max>
+      <input keep="true" as="y">a_window</input>
+      <output append="false" as="max">m_plot_max</output>
+    </max>
+    <formula formula="max(0.001,([2]-[1])*0.04)">
+      <input keep="true">m_plot_min</input>
+      <input keep="true">m_plot_max</input>
+      <output append="false">m_plot_pad</output>
+    </formula>
+    <formula formula="[1]-[2]">
+      <input keep="true">m_plot_min</input>
+      <input keep="true">m_plot_pad</input>
+      <output append="false">m_line_lo</output>
+    </formula>
+    <formula formula="[1]+[2]">
+      <input keep="true">m_plot_max</input>
+      <input keep="true">m_plot_pad</input>
+      <output append="false">m_line_hi</output>
+    </formula>
+    <append>
+      <input keep="true" as="in">m_line_lo</input>
+      <input keep="true" as="in">m_line_hi</input>
+      <output append="false">m_line_y</output>
+    </append>
+    <append>
+      <input keep="true" as="in">m_start</input>
+      <input keep="true" as="in">m_start</input>
+      <output append="false">m_lower_candidate</output>
+    </append>
+    <if greater="true">
+      <input keep="true" as="a">m_n</input>
+      <input type="value" as="b">0</input>
+      <input keep="true" as="true">m_lower_candidate</input>
+      <input type="empty" as="false" />
+      <output append="false" as="result">m_lower_x</output>
+    </if>
+    <append>
+      <input keep="true" as="in">m_end</input>
+      <input keep="true" as="in">m_end</input>
+      <output append="false">m_upper_candidate</output>
+    </append>
+    <if greater="true">
+      <input keep="true" as="a">m_n</input>
+      <input type="value" as="b">0</input>
+      <input keep="true" as="true">m_upper_candidate</input>
+      <input type="empty" as="false" />
+      <output append="false" as="result">m_upper_x</output>
+    </if>
+    <min>
+      <input keep="true" as="y">t_window</input>
+      <output append="false" as="min">zero_start</output>
+    </min>
+    <max>
+      <input keep="true" as="y">t_window</input>
+      <output append="false" as="max">zero_end</output>
+    </max>
+    <append>
+      <input keep="true" as="in">zero_start</input>
+      <input keep="true" as="in">zero_end</input>
+      <output append="false">zero_x_candidate</output>
+    </append>
+    <count>
+      <input keep="true">t_window</input>
+      <output append="false">window_n</output>
+    </count>
+    <if greater="true">
+      <input keep="true" as="a">window_n</input>
+      <input type="value" as="b">0</input>
+      <input keep="true" as="true">zero_x_candidate</input>
+      <input type="empty" as="false" />
+      <output append="false" as="result">zero_x</output>
+    </if>
+    <formula formula="0*[1_]">
+      <input keep="true">zero_x</input>
+      <output append="false">zero_y</output>
+    </formula>
+    <formula formula="([1]-1)/[2]">
+      <input keep="true">n_all</input>
+      <input keep="true">run_duration</input>
+      <output append="false">recorded_rate</output>
+    </formula>
+    <if greater="true">
+      <input keep="true" as="a">n_all</input>
+      <input type="value" as="b">1</input>
+      <input type="value" as="true">1</input>
+      <input type="value" as="false">0</input>
+      <output append="false" as="result">has_rate</output>
+    </if>
+    <if equal="true">
+      <input keep="true" as="a">sensor_choice</input>
+      <input type="value" as="b">1</input>
+      <input type="value" as="true">1</input>
+      <input type="value" as="false">0</input>
+      <output append="false" as="result">sensor_1</output>
+    </if>
+    <if equal="true">
+      <input keep="true" as="a">sensor_choice</input>
+      <input type="value" as="b">2</input>
+      <input type="value" as="true">1</input>
+      <input type="value" as="false">0</input>
+      <output append="false" as="result">sensor_2</output>
+    </if>
+    <if equal="true">
+      <input keep="true" as="a">sensor_choice</input>
+      <input type="value" as="b">3</input>
+      <input type="value" as="true">1</input>
+      <input type="value" as="false">0</input>
+      <output append="false" as="result">sensor_3</output>
+    </if>
+    <if equal="true">
+      <input keep="true" as="a">axis</input>
+      <input type="value" as="b">1</input>
+      <input type="value" as="true">1</input>
+      <input type="value" as="false">0</input>
+      <output append="false" as="result">axis_1</output>
+    </if>
+    <formula formula="[1]*[2]">
+      <input keep="true">axis_1</input>
+      <input keep="true">is_acc</input>
+      <output append="false">v_axis_1</output>
+    </formula>
+    <formula formula="[1]*[2]">
+      <input keep="true">axis_1</input>
+      <input keep="true">is_acc</input>
+      <output append="false">x_axis_1</output>
+    </formula>
+    <formula formula="[1]*[2]">
+      <input keep="true">axis_1</input>
+      <input keep="true">is_gyro</input>
+      <output append="false">theta_axis_1</output>
+    </formula>
+    <if equal="true">
+      <input keep="true" as="a">axis</input>
+      <input type="value" as="b">2</input>
+      <input type="value" as="true">1</input>
+      <input type="value" as="false">0</input>
+      <output append="false" as="result">axis_2</output>
+    </if>
+    <formula formula="[1]*[2]">
+      <input keep="true">axis_2</input>
+      <input keep="true">is_acc</input>
+      <output append="false">v_axis_2</output>
+    </formula>
+    <formula formula="[1]*[2]">
+      <input keep="true">axis_2</input>
+      <input keep="true">is_acc</input>
+      <output append="false">x_axis_2</output>
+    </formula>
+    <formula formula="[1]*[2]">
+      <input keep="true">axis_2</input>
+      <input keep="true">is_gyro</input>
+      <output append="false">theta_axis_2</output>
+    </formula>
+    <if equal="true">
+      <input keep="true" as="a">axis</input>
+      <input type="value" as="b">3</input>
+      <input type="value" as="true">1</input>
+      <input type="value" as="false">0</input>
+      <output append="false" as="result">axis_3</output>
+    </if>
+    <formula formula="[1]*[2]">
+      <input keep="true">axis_3</input>
+      <input keep="true">is_acc</input>
+      <output append="false">v_axis_3</output>
+    </formula>
+    <formula formula="[1]*[2]">
+      <input keep="true">axis_3</input>
+      <input keep="true">is_acc</input>
+      <output append="false">x_axis_3</output>
+    </formula>
+    <formula formula="[1]*[2]">
+      <input keep="true">axis_3</input>
+      <input keep="true">is_gyro</input>
+      <output append="false">theta_axis_3</output>
+    </formula>
+    <if equal="true">
+      <input keep="true" as="a">signal_choice</input>
+      <input type="value" as="b">11</input>
+      <input type="value" as="true">1</input>
+      <input type="value" as="false">0</input>
+      <output append="false" as="result">signal_11</output>
+    </if>
+    <if equal="true">
+      <input keep="true" as="a">signal_choice</input>
+      <input type="value" as="b">12</input>
+      <input type="value" as="true">1</input>
+      <input type="value" as="false">0</input>
+      <output append="false" as="result">signal_12</output>
+    </if>
+    <if equal="true">
+      <input keep="true" as="a">signal_choice</input>
+      <input type="value" as="b">13</input>
+      <input type="value" as="true">1</input>
+      <input type="value" as="false">0</input>
+      <output append="false" as="result">signal_13</output>
+    </if>
+    <if equal="true">
+      <input keep="true" as="a">signal_choice</input>
+      <input type="value" as="b">21</input>
+      <input type="value" as="true">1</input>
+      <input type="value" as="false">0</input>
+      <output append="false" as="result">signal_21</output>
+    </if>
+    <if equal="true">
+      <input keep="true" as="a">signal_choice</input>
+      <input type="value" as="b">22</input>
+      <input type="value" as="true">1</input>
+      <input type="value" as="false">0</input>
+      <output append="false" as="result">signal_22</output>
+    </if>
+    <if equal="true">
+      <input keep="true" as="a">signal_choice</input>
+      <input type="value" as="b">23</input>
+      <input type="value" as="true">1</input>
+      <input type="value" as="false">0</input>
+      <output append="false" as="result">signal_23</output>
+    </if>
+    <if equal="true">
+      <input keep="true" as="a">signal_choice</input>
+      <input type="value" as="b">31</input>
+      <input type="value" as="true">1</input>
+      <input type="value" as="false">0</input>
+      <output append="false" as="result">signal_31</output>
+    </if>
+    <if equal="true">
+      <input keep="true" as="a">signal_choice</input>
+      <input type="value" as="b">32</input>
+      <input type="value" as="true">1</input>
+      <input type="value" as="false">0</input>
+      <output append="false" as="result">signal_32</output>
+    </if>
+    <if equal="true">
+      <input keep="true" as="a">signal_choice</input>
+      <input type="value" as="b">33</input>
+      <input type="value" as="true">1</input>
+      <input type="value" as="false">0</input>
+      <output append="false" as="result">signal_33</output>
+    </if>
+  </analysis>
+  <views>
+    <view label="Analysis">
+      <dropdown label="Sensor" default="3">
+        <output>sensor_choice</output>
+        <map value="3">Acceleration without g</map>
+        <map value="1">Acceleration with g</map>
+        <map value="2">Gyroscope</map>
+      </dropdown>
+      <dropdown label="Axis" default="1">
+        <output>axis</output>
+        <map value="1">X</map>
+        <map value="2">Y</map>
+        <map value="3">Z</map>
+      </dropdown>
+      <graph label="Raw acceleration with g - X" labelX="Time" unitX="s" labelY="Acceleration" unitY="m/s²" aspectRatio="2.6" partialUpdate="false" scaleMinX="auto" scaleMaxX="auto" scaleMinY="auto" scaleMaxY="auto" timeOnX="true" followX="false" visibility="signal_11">
+        <input axis="x">t_window</input>
+        <input axis="y" color="white" lineWidth="1" style="lines">a_window</input>
+        <input axis="x">b_t</input>
+        <input axis="y" color="green" lineWidth="1.5" style="lines">b_a</input>
+        <input axis="x">m_t</input>
+        <input axis="y" color="blue" lineWidth="1.5" style="lines">m_a</input>
+        <input axis="x">b_lower_x</input>
+        <input axis="y" color="green" lineWidth="0.75" style="lines">b_line_y</input>
+        <input axis="x">b_upper_x</input>
+        <input axis="y" color="green" lineWidth="0.75" style="lines">b_line_y</input>
+        <input axis="x">m_lower_x</input>
+        <input axis="y" color="blue" lineWidth="0.75" style="lines">m_line_y</input>
+        <input axis="x">m_upper_x</input>
+        <input axis="y" color="blue" lineWidth="0.75" style="lines">m_line_y</input>
+      </graph>
+      <graph label="Raw acceleration with g - Y" labelX="Time" unitX="s" labelY="Acceleration" unitY="m/s²" aspectRatio="2.6" partialUpdate="false" scaleMinX="auto" scaleMaxX="auto" scaleMinY="auto" scaleMaxY="auto" timeOnX="true" followX="false" visibility="signal_12">
+        <input axis="x">t_window</input>
+        <input axis="y" color="white" lineWidth="1" style="lines">a_window</input>
+        <input axis="x">b_t</input>
+        <input axis="y" color="green" lineWidth="1.5" style="lines">b_a</input>
+        <input axis="x">m_t</input>
+        <input axis="y" color="blue" lineWidth="1.5" style="lines">m_a</input>
+        <input axis="x">b_lower_x</input>
+        <input axis="y" color="green" lineWidth="0.75" style="lines">b_line_y</input>
+        <input axis="x">b_upper_x</input>
+        <input axis="y" color="green" lineWidth="0.75" style="lines">b_line_y</input>
+        <input axis="x">m_lower_x</input>
+        <input axis="y" color="blue" lineWidth="0.75" style="lines">m_line_y</input>
+        <input axis="x">m_upper_x</input>
+        <input axis="y" color="blue" lineWidth="0.75" style="lines">m_line_y</input>
+      </graph>
+      <graph label="Raw acceleration with g - Z" labelX="Time" unitX="s" labelY="Acceleration" unitY="m/s²" aspectRatio="2.6" partialUpdate="false" scaleMinX="auto" scaleMaxX="auto" scaleMinY="auto" scaleMaxY="auto" timeOnX="true" followX="false" visibility="signal_13">
+        <input axis="x">t_window</input>
+        <input axis="y" color="white" lineWidth="1" style="lines">a_window</input>
+        <input axis="x">b_t</input>
+        <input axis="y" color="green" lineWidth="1.5" style="lines">b_a</input>
+        <input axis="x">m_t</input>
+        <input axis="y" color="blue" lineWidth="1.5" style="lines">m_a</input>
+        <input axis="x">b_lower_x</input>
+        <input axis="y" color="green" lineWidth="0.75" style="lines">b_line_y</input>
+        <input axis="x">b_upper_x</input>
+        <input axis="y" color="green" lineWidth="0.75" style="lines">b_line_y</input>
+        <input axis="x">m_lower_x</input>
+        <input axis="y" color="blue" lineWidth="0.75" style="lines">m_line_y</input>
+        <input axis="x">m_upper_x</input>
+        <input axis="y" color="blue" lineWidth="0.75" style="lines">m_line_y</input>
+      </graph>
+      <graph label="Raw angular velocity - X" labelX="Time" unitX="s" labelY="Angular velocity" unitY="rad/s" aspectRatio="2.6" partialUpdate="false" scaleMinX="auto" scaleMaxX="auto" scaleMinY="auto" scaleMaxY="auto" timeOnX="true" followX="false" visibility="signal_21">
+        <input axis="x">t_window</input>
+        <input axis="y" color="white" lineWidth="1" style="lines">a_window</input>
+        <input axis="x">b_t</input>
+        <input axis="y" color="green" lineWidth="1.5" style="lines">b_a</input>
+        <input axis="x">m_t</input>
+        <input axis="y" color="blue" lineWidth="1.5" style="lines">m_a</input>
+        <input axis="x">b_lower_x</input>
+        <input axis="y" color="green" lineWidth="0.75" style="lines">b_line_y</input>
+        <input axis="x">b_upper_x</input>
+        <input axis="y" color="green" lineWidth="0.75" style="lines">b_line_y</input>
+        <input axis="x">m_lower_x</input>
+        <input axis="y" color="blue" lineWidth="0.75" style="lines">m_line_y</input>
+        <input axis="x">m_upper_x</input>
+        <input axis="y" color="blue" lineWidth="0.75" style="lines">m_line_y</input>
+      </graph>
+      <graph label="Raw angular velocity - Y" labelX="Time" unitX="s" labelY="Angular velocity" unitY="rad/s" aspectRatio="2.6" partialUpdate="false" scaleMinX="auto" scaleMaxX="auto" scaleMinY="auto" scaleMaxY="auto" timeOnX="true" followX="false" visibility="signal_22">
+        <input axis="x">t_window</input>
+        <input axis="y" color="white" lineWidth="1" style="lines">a_window</input>
+        <input axis="x">b_t</input>
+        <input axis="y" color="green" lineWidth="1.5" style="lines">b_a</input>
+        <input axis="x">m_t</input>
+        <input axis="y" color="blue" lineWidth="1.5" style="lines">m_a</input>
+        <input axis="x">b_lower_x</input>
+        <input axis="y" color="green" lineWidth="0.75" style="lines">b_line_y</input>
+        <input axis="x">b_upper_x</input>
+        <input axis="y" color="green" lineWidth="0.75" style="lines">b_line_y</input>
+        <input axis="x">m_lower_x</input>
+        <input axis="y" color="blue" lineWidth="0.75" style="lines">m_line_y</input>
+        <input axis="x">m_upper_x</input>
+        <input axis="y" color="blue" lineWidth="0.75" style="lines">m_line_y</input>
+      </graph>
+      <graph label="Raw angular velocity - Z" labelX="Time" unitX="s" labelY="Angular velocity" unitY="rad/s" aspectRatio="2.6" partialUpdate="false" scaleMinX="auto" scaleMaxX="auto" scaleMinY="auto" scaleMaxY="auto" timeOnX="true" followX="false" visibility="signal_23">
+        <input axis="x">t_window</input>
+        <input axis="y" color="white" lineWidth="1" style="lines">a_window</input>
+        <input axis="x">b_t</input>
+        <input axis="y" color="green" lineWidth="1.5" style="lines">b_a</input>
+        <input axis="x">m_t</input>
+        <input axis="y" color="blue" lineWidth="1.5" style="lines">m_a</input>
+        <input axis="x">b_lower_x</input>
+        <input axis="y" color="green" lineWidth="0.75" style="lines">b_line_y</input>
+        <input axis="x">b_upper_x</input>
+        <input axis="y" color="green" lineWidth="0.75" style="lines">b_line_y</input>
+        <input axis="x">m_lower_x</input>
+        <input axis="y" color="blue" lineWidth="0.75" style="lines">m_line_y</input>
+        <input axis="x">m_upper_x</input>
+        <input axis="y" color="blue" lineWidth="0.75" style="lines">m_line_y</input>
+      </graph>
+      <graph label="Raw acceleration without g - X" labelX="Time" unitX="s" labelY="Acceleration" unitY="m/s²" aspectRatio="2.6" partialUpdate="false" scaleMinX="auto" scaleMaxX="auto" scaleMinY="auto" scaleMaxY="auto" timeOnX="true" followX="false" visibility="signal_31">
+        <input axis="x">t_window</input>
+        <input axis="y" color="white" lineWidth="1" style="lines">a_window</input>
+        <input axis="x">b_t</input>
+        <input axis="y" color="green" lineWidth="1.5" style="lines">b_a</input>
+        <input axis="x">m_t</input>
+        <input axis="y" color="blue" lineWidth="1.5" style="lines">m_a</input>
+        <input axis="x">b_lower_x</input>
+        <input axis="y" color="green" lineWidth="0.75" style="lines">b_line_y</input>
+        <input axis="x">b_upper_x</input>
+        <input axis="y" color="green" lineWidth="0.75" style="lines">b_line_y</input>
+        <input axis="x">m_lower_x</input>
+        <input axis="y" color="blue" lineWidth="0.75" style="lines">m_line_y</input>
+        <input axis="x">m_upper_x</input>
+        <input axis="y" color="blue" lineWidth="0.75" style="lines">m_line_y</input>
+      </graph>
+      <graph label="Raw acceleration without g - Y" labelX="Time" unitX="s" labelY="Acceleration" unitY="m/s²" aspectRatio="2.6" partialUpdate="false" scaleMinX="auto" scaleMaxX="auto" scaleMinY="auto" scaleMaxY="auto" timeOnX="true" followX="false" visibility="signal_32">
+        <input axis="x">t_window</input>
+        <input axis="y" color="white" lineWidth="1" style="lines">a_window</input>
+        <input axis="x">b_t</input>
+        <input axis="y" color="green" lineWidth="1.5" style="lines">b_a</input>
+        <input axis="x">m_t</input>
+        <input axis="y" color="blue" lineWidth="1.5" style="lines">m_a</input>
+        <input axis="x">b_lower_x</input>
+        <input axis="y" color="green" lineWidth="0.75" style="lines">b_line_y</input>
+        <input axis="x">b_upper_x</input>
+        <input axis="y" color="green" lineWidth="0.75" style="lines">b_line_y</input>
+        <input axis="x">m_lower_x</input>
+        <input axis="y" color="blue" lineWidth="0.75" style="lines">m_line_y</input>
+        <input axis="x">m_upper_x</input>
+        <input axis="y" color="blue" lineWidth="0.75" style="lines">m_line_y</input>
+      </graph>
+      <graph label="Raw acceleration without g - Z" labelX="Time" unitX="s" labelY="Acceleration" unitY="m/s²" aspectRatio="2.6" partialUpdate="false" scaleMinX="auto" scaleMaxX="auto" scaleMinY="auto" scaleMaxY="auto" timeOnX="true" followX="false" visibility="signal_33">
+        <input axis="x">t_window</input>
+        <input axis="y" color="white" lineWidth="1" style="lines">a_window</input>
+        <input axis="x">b_t</input>
+        <input axis="y" color="green" lineWidth="1.5" style="lines">b_a</input>
+        <input axis="x">m_t</input>
+        <input axis="y" color="blue" lineWidth="1.5" style="lines">m_a</input>
+        <input axis="x">b_lower_x</input>
+        <input axis="y" color="green" lineWidth="0.75" style="lines">b_line_y</input>
+        <input axis="x">b_upper_x</input>
+        <input axis="y" color="green" lineWidth="0.75" style="lines">b_line_y</input>
+        <input axis="x">m_lower_x</input>
+        <input axis="y" color="blue" lineWidth="0.75" style="lines">m_line_y</input>
+        <input axis="x">m_upper_x</input>
+        <input axis="y" color="blue" lineWidth="0.75" style="lines">m_line_y</input>
+      </graph>
+      <value label="Correction range" format="ascii" size="0.8">
+        <input>b_time_text</input>
+      </value>
+      <slider type="range" minValue="0" maxValue="100" stepSize="0.01" showValue="false" color="green">
+        <output value="lowerValue">bias_low_pct</output>
+        <output value="upperValue">bias_high_pct</output>
+      </slider>
+      <button label="Calculate/Remove correction" dynamicLabel="label_code">
+        <input>next_action</input>
+        <output>corr_action</output>
+        <map max="0.5">Calculate/Remove correction</map>
+        <map min="0.5" max="1.5">Calculate correction</map>
+        <map min="1.5">Remove correction</map>
+      </button>
+      <value label="Accl. correction" precision="6" size="0.8" unit="m/s²" visibility="is_acc">
+        <input>applied_correction</input>
+      </value>
+      <value label="Gyro correction" precision="6" size="0.8" unit="rad/s" visibility="is_gyro">
+        <input>applied_correction</input>
+      </value>
+      <value label="Integrate range" format="ascii" size="0.8">
+        <input>m_time_text</input>
+      </value>
+      <slider type="range" minValue="0" maxValue="100" stepSize="0.01" showValue="false" color="blue">
+        <output value="lowerValue">motion_low_pct</output>
+        <output value="upperValue">motion_high_pct</output>
+      </slider>
+      <graph label="Corrected acceleration - X" labelX="Time" unitX="s" labelY="Acceleration" unitY="m/s²" aspectRatio="2.6" partialUpdate="false" scaleMinX="auto" scaleMaxX="auto" scaleMinY="auto" scaleMaxY="auto" timeOnX="false" followX="false" visibility="signal_11">
+        <input axis="x">m_t</input>
+        <input axis="y" color="808080" lineWidth="0.75" style="lines">m_zero_y</input>
+        <input axis="x">m_t</input>
+        <input axis="y" color="blue" lineWidth="2" style="lines">corrected_candidate</input>
+      </graph>
+      <graph label="Corrected acceleration - Y" labelX="Time" unitX="s" labelY="Acceleration" unitY="m/s²" aspectRatio="2.6" partialUpdate="false" scaleMinX="auto" scaleMaxX="auto" scaleMinY="auto" scaleMaxY="auto" timeOnX="false" followX="false" visibility="signal_12">
+        <input axis="x">m_t</input>
+        <input axis="y" color="808080" lineWidth="0.75" style="lines">m_zero_y</input>
+        <input axis="x">m_t</input>
+        <input axis="y" color="blue" lineWidth="2" style="lines">corrected_candidate</input>
+      </graph>
+      <graph label="Corrected acceleration - Z" labelX="Time" unitX="s" labelY="Acceleration" unitY="m/s²" aspectRatio="2.6" partialUpdate="false" scaleMinX="auto" scaleMaxX="auto" scaleMinY="auto" scaleMaxY="auto" timeOnX="false" followX="false" visibility="signal_13">
+        <input axis="x">m_t</input>
+        <input axis="y" color="808080" lineWidth="0.75" style="lines">m_zero_y</input>
+        <input axis="x">m_t</input>
+        <input axis="y" color="blue" lineWidth="2" style="lines">corrected_candidate</input>
+      </graph>
+      <graph label="Corrected angular velocity - X" labelX="Time" unitX="s" labelY="Angular velocity" unitY="rad/s" aspectRatio="2.6" partialUpdate="false" scaleMinX="auto" scaleMaxX="auto" scaleMinY="auto" scaleMaxY="auto" timeOnX="false" followX="false" visibility="signal_21">
+        <input axis="x">m_t</input>
+        <input axis="y" color="808080" lineWidth="0.75" style="lines">m_zero_y</input>
+        <input axis="x">m_t</input>
+        <input axis="y" color="blue" lineWidth="2" style="lines">corrected_candidate</input>
+      </graph>
+      <graph label="Corrected angular velocity - Y" labelX="Time" unitX="s" labelY="Angular velocity" unitY="rad/s" aspectRatio="2.6" partialUpdate="false" scaleMinX="auto" scaleMaxX="auto" scaleMinY="auto" scaleMaxY="auto" timeOnX="false" followX="false" visibility="signal_22">
+        <input axis="x">m_t</input>
+        <input axis="y" color="808080" lineWidth="0.75" style="lines">m_zero_y</input>
+        <input axis="x">m_t</input>
+        <input axis="y" color="blue" lineWidth="2" style="lines">corrected_candidate</input>
+      </graph>
+      <graph label="Corrected angular velocity - Z" labelX="Time" unitX="s" labelY="Angular velocity" unitY="rad/s" aspectRatio="2.6" partialUpdate="false" scaleMinX="auto" scaleMaxX="auto" scaleMinY="auto" scaleMaxY="auto" timeOnX="false" followX="false" visibility="signal_23">
+        <input axis="x">m_t</input>
+        <input axis="y" color="808080" lineWidth="0.75" style="lines">m_zero_y</input>
+        <input axis="x">m_t</input>
+        <input axis="y" color="blue" lineWidth="2" style="lines">corrected_candidate</input>
+      </graph>
+      <graph label="Corrected acceleration - X" labelX="Time" unitX="s" labelY="Acceleration" unitY="m/s²" aspectRatio="2.6" partialUpdate="false" scaleMinX="auto" scaleMaxX="auto" scaleMinY="auto" scaleMaxY="auto" timeOnX="false" followX="false" visibility="signal_31">
+        <input axis="x">m_t</input>
+        <input axis="y" color="808080" lineWidth="0.75" style="lines">m_zero_y</input>
+        <input axis="x">m_t</input>
+        <input axis="y" color="blue" lineWidth="2" style="lines">corrected_candidate</input>
+      </graph>
+      <graph label="Corrected acceleration - Y" labelX="Time" unitX="s" labelY="Acceleration" unitY="m/s²" aspectRatio="2.6" partialUpdate="false" scaleMinX="auto" scaleMaxX="auto" scaleMinY="auto" scaleMaxY="auto" timeOnX="false" followX="false" visibility="signal_32">
+        <input axis="x">m_t</input>
+        <input axis="y" color="808080" lineWidth="0.75" style="lines">m_zero_y</input>
+        <input axis="x">m_t</input>
+        <input axis="y" color="blue" lineWidth="2" style="lines">corrected_candidate</input>
+      </graph>
+      <graph label="Corrected acceleration - Z" labelX="Time" unitX="s" labelY="Acceleration" unitY="m/s²" aspectRatio="2.6" partialUpdate="false" scaleMinX="auto" scaleMaxX="auto" scaleMinY="auto" scaleMaxY="auto" timeOnX="false" followX="false" visibility="signal_33">
+        <input axis="x">m_t</input>
+        <input axis="y" color="808080" lineWidth="0.75" style="lines">m_zero_y</input>
+        <input axis="x">m_t</input>
+        <input axis="y" color="blue" lineWidth="2" style="lines">corrected_candidate</input>
+      </graph>
+      <info label="Corrected = raw − correction. Gray line = zero." size="0.75" />
+      <edit label="Initial velocity" unit="m/s" default="0" signed="true" decimal="true" visibility="is_acc">
+        <output>v0</output>
+      </edit>
+      <graph label="Velocity - X" labelX="Time" unitX="s" labelY="Velocity" unitY="m/s" aspectRatio="2.6" partialUpdate="false" scaleMinX="auto" scaleMaxX="auto" scaleMinY="auto" scaleMaxY="auto" timeOnX="false" followX="false" visibility="v_axis_1">
+        <input axis="x">result_t</input>
+        <input axis="y" color="blue" lineWidth="2" style="lines">v</input>
+      </graph>
+      <graph label="Angle - X" labelX="Time" unitX="s" labelY="Angle" unitY="rad" aspectRatio="2.6" partialUpdate="false" scaleMinX="auto" scaleMaxX="auto" scaleMinY="auto" scaleMaxY="auto" timeOnX="false" followX="false" visibility="theta_axis_1">
+        <input axis="x">result_t</input>
+        <input axis="y" color="blue" lineWidth="2" style="lines">v</input>
+      </graph>
+      <graph label="Displacement / distance - X" labelX="Time" unitX="s" labelY="Displacement / distance" unitY="m" aspectRatio="2.6" partialUpdate="false" scaleMinX="auto" scaleMaxX="auto" scaleMinY="auto" scaleMaxY="auto" timeOnX="false" followX="false" visibility="x_axis_1">
+        <input axis="x">acc_result_t</input>
+        <input axis="y" color="orange" lineWidth="2" style="lines">displacement</input>
+        <input axis="x">acc_result_t</input>
+        <input axis="y" color="magenta" lineWidth="1" style="dots">distance</input>
+      </graph>
+      <info label="— Displacement" color="orange" size="0.75" visibility="x_axis_1" />
+      <info label="••• Distance" color="magenta" size="0.75" visibility="x_axis_1" />
+      <graph label="Velocity - Y" labelX="Time" unitX="s" labelY="Velocity" unitY="m/s" aspectRatio="2.6" partialUpdate="false" scaleMinX="auto" scaleMaxX="auto" scaleMinY="auto" scaleMaxY="auto" timeOnX="false" followX="false" visibility="v_axis_2">
+        <input axis="x">result_t</input>
+        <input axis="y" color="blue" lineWidth="2" style="lines">v</input>
+      </graph>
+      <graph label="Angle - Y" labelX="Time" unitX="s" labelY="Angle" unitY="rad" aspectRatio="2.6" partialUpdate="false" scaleMinX="auto" scaleMaxX="auto" scaleMinY="auto" scaleMaxY="auto" timeOnX="false" followX="false" visibility="theta_axis_2">
+        <input axis="x">result_t</input>
+        <input axis="y" color="blue" lineWidth="2" style="lines">v</input>
+      </graph>
+      <graph label="Displacement / distance - Y" labelX="Time" unitX="s" labelY="Displacement / distance" unitY="m" aspectRatio="2.6" partialUpdate="false" scaleMinX="auto" scaleMaxX="auto" scaleMinY="auto" scaleMaxY="auto" timeOnX="false" followX="false" visibility="x_axis_2">
+        <input axis="x">acc_result_t</input>
+        <input axis="y" color="orange" lineWidth="2" style="lines">displacement</input>
+        <input axis="x">acc_result_t</input>
+        <input axis="y" color="magenta" lineWidth="1" style="dots">distance</input>
+      </graph>
+      <info label="— Displacement" color="orange" size="0.75" visibility="x_axis_2" />
+      <info label="••• Distance" color="magenta" size="0.75" visibility="x_axis_2" />
+      <graph label="Velocity - Z" labelX="Time" unitX="s" labelY="Velocity" unitY="m/s" aspectRatio="2.6" partialUpdate="false" scaleMinX="auto" scaleMaxX="auto" scaleMinY="auto" scaleMaxY="auto" timeOnX="false" followX="false" visibility="v_axis_3">
+        <input axis="x">result_t</input>
+        <input axis="y" color="blue" lineWidth="2" style="lines">v</input>
+      </graph>
+      <graph label="Angle - Z" labelX="Time" unitX="s" labelY="Angle" unitY="rad" aspectRatio="2.6" partialUpdate="false" scaleMinX="auto" scaleMaxX="auto" scaleMinY="auto" scaleMaxY="auto" timeOnX="false" followX="false" visibility="theta_axis_3">
+        <input axis="x">result_t</input>
+        <input axis="y" color="blue" lineWidth="2" style="lines">v</input>
+      </graph>
+      <graph label="Displacement / distance - Z" labelX="Time" unitX="s" labelY="Displacement / distance" unitY="m" aspectRatio="2.6" partialUpdate="false" scaleMinX="auto" scaleMaxX="auto" scaleMinY="auto" scaleMaxY="auto" timeOnX="false" followX="false" visibility="x_axis_3">
+        <input axis="x">acc_result_t</input>
+        <input axis="y" color="orange" lineWidth="2" style="lines">displacement</input>
+        <input axis="x">acc_result_t</input>
+        <input axis="y" color="magenta" lineWidth="1" style="dots">distance</input>
+      </graph>
+      <info label="— Displacement" color="orange" size="0.75" visibility="x_axis_3" />
+      <info label="••• Distance" color="magenta" size="0.75" visibility="x_axis_3" />
+      <info label="Initial velocity 0 requires rest at the selected start. Keep phone orientation fixed." size="0.75" visibility="is_acc" />
+      <info label="Gyroscope integrates to angle for fixed-axis rotation." size="0.75" visibility="is_gyro" />
+    </view>
+    <view label="Raw">
+      <graph label="Acceleration with g - X" labelX="Time" unitX="s" labelY="Acceleration" unitY="m/s²" aspectRatio="2.6" partialUpdate="false" scaleMinX="auto" scaleMaxX="auto" scaleMinY="auto" scaleMaxY="auto" timeOnX="true" followX="false" visibility="sensor_1">
+        <input axis="x">t_all</input>
+        <input axis="y" color="orange" lineWidth="1" style="lines">x_all</input>
+      </graph>
+      <graph label="Acceleration without g - X" labelX="Time" unitX="s" labelY="Acceleration" unitY="m/s²" aspectRatio="2.6" partialUpdate="false" scaleMinX="auto" scaleMaxX="auto" scaleMinY="auto" scaleMaxY="auto" timeOnX="true" followX="false" visibility="sensor_3">
+        <input axis="x">t_all</input>
+        <input axis="y" color="orange" lineWidth="1" style="lines">x_all</input>
+      </graph>
+      <graph label="Gyroscope - X" labelX="Time" unitX="s" labelY="Angular velocity" unitY="rad/s" aspectRatio="2.6" partialUpdate="false" scaleMinX="auto" scaleMaxX="auto" scaleMinY="auto" scaleMaxY="auto" timeOnX="true" followX="false" visibility="sensor_2">
+        <input axis="x">t_all</input>
+        <input axis="y" color="orange" lineWidth="1" style="lines">x_all</input>
+      </graph>
+      <graph label="Acceleration with g - Y" labelX="Time" unitX="s" labelY="Acceleration" unitY="m/s²" aspectRatio="2.6" partialUpdate="false" scaleMinX="auto" scaleMaxX="auto" scaleMinY="auto" scaleMaxY="auto" timeOnX="true" followX="false" visibility="sensor_1">
+        <input axis="x">t_all</input>
+        <input axis="y" color="green" lineWidth="1" style="lines">y_all</input>
+      </graph>
+      <graph label="Acceleration without g - Y" labelX="Time" unitX="s" labelY="Acceleration" unitY="m/s²" aspectRatio="2.6" partialUpdate="false" scaleMinX="auto" scaleMaxX="auto" scaleMinY="auto" scaleMaxY="auto" timeOnX="true" followX="false" visibility="sensor_3">
+        <input axis="x">t_all</input>
+        <input axis="y" color="green" lineWidth="1" style="lines">y_all</input>
+      </graph>
+      <graph label="Gyroscope - Y" labelX="Time" unitX="s" labelY="Angular velocity" unitY="rad/s" aspectRatio="2.6" partialUpdate="false" scaleMinX="auto" scaleMaxX="auto" scaleMinY="auto" scaleMaxY="auto" timeOnX="true" followX="false" visibility="sensor_2">
+        <input axis="x">t_all</input>
+        <input axis="y" color="green" lineWidth="1" style="lines">y_all</input>
+      </graph>
+      <graph label="Acceleration with g - Z" labelX="Time" unitX="s" labelY="Acceleration" unitY="m/s²" aspectRatio="2.6" partialUpdate="false" scaleMinX="auto" scaleMaxX="auto" scaleMinY="auto" scaleMaxY="auto" timeOnX="true" followX="false" visibility="sensor_1">
+        <input axis="x">t_all</input>
+        <input axis="y" color="blue" lineWidth="1" style="lines">z_all</input>
+      </graph>
+      <graph label="Acceleration without g - Z" labelX="Time" unitX="s" labelY="Acceleration" unitY="m/s²" aspectRatio="2.6" partialUpdate="false" scaleMinX="auto" scaleMaxX="auto" scaleMinY="auto" scaleMaxY="auto" timeOnX="true" followX="false" visibility="sensor_3">
+        <input axis="x">t_all</input>
+        <input axis="y" color="blue" lineWidth="1" style="lines">z_all</input>
+      </graph>
+      <graph label="Gyroscope - Z" labelX="Time" unitX="s" labelY="Angular velocity" unitY="rad/s" aspectRatio="2.6" partialUpdate="false" scaleMinX="auto" scaleMaxX="auto" scaleMinY="auto" scaleMaxY="auto" timeOnX="true" followX="false" visibility="sensor_2">
+        <input axis="x">t_all</input>
+        <input axis="y" color="blue" lineWidth="1" style="lines">z_all</input>
+      </graph>
+      <graph label="Acceleration with g - Absolute" labelX="Time" unitX="s" labelY="Magnitude" unitY="m/s²" aspectRatio="2.6" partialUpdate="false" scaleMinX="auto" scaleMaxX="auto" scaleMinY="auto" scaleMaxY="auto" timeOnX="true" followX="false" visibility="sensor_1">
+        <input axis="x">t_all</input>
+        <input axis="y" color="magenta" lineWidth="1" style="lines">magnitude_all</input>
+      </graph>
+      <graph label="Acceleration without g - Absolute" labelX="Time" unitX="s" labelY="Magnitude" unitY="m/s²" aspectRatio="2.6" partialUpdate="false" scaleMinX="auto" scaleMaxX="auto" scaleMinY="auto" scaleMaxY="auto" timeOnX="true" followX="false" visibility="sensor_3">
+        <input axis="x">t_all</input>
+        <input axis="y" color="magenta" lineWidth="1" style="lines">magnitude_all</input>
+      </graph>
+      <graph label="Gyroscope - Absolute" labelX="Time" unitX="s" labelY="Magnitude" unitY="rad/s" aspectRatio="2.6" partialUpdate="false" scaleMinX="auto" scaleMaxX="auto" scaleMinY="auto" scaleMaxY="auto" timeOnX="true" followX="false" visibility="sensor_2">
+        <input axis="x">t_all</input>
+        <input axis="y" color="magenta" lineWidth="1" style="lines">magnitude_all</input>
+      </graph>
+      <value label="Recorded rate" precision="1" size="0.8" unit="Hz" visibility="has_rate">
+        <input>recorded_rate</input>
+      </value>
+      <info label="Full original recording at the fastest available rate. No added smoothing." size="0.75" />
+    </view>
+  </views>
+  <export>
+    <set name="Raw acceleration with g">
+      <data name="Time (s)">t</data>
+      <data name="X (m/s^2)">ax</data>
+      <data name="Y (m/s^2)">ay</data>
+      <data name="Z (m/s^2)">az</data>
+    </set>
+    <set name="Raw acceleration without g">
+      <data name="Time (s)">lt</data>
+      <data name="X (m/s^2)">lx</data>
+      <data name="Y (m/s^2)">ly</data>
+      <data name="Z (m/s^2)">lz</data>
+    </set>
+    <set name="Raw gyroscope">
+      <data name="Time (s)">gt</data>
+      <data name="X (rad/s)">gx</data>
+      <data name="Y (rad/s)">gy</data>
+      <data name="Z (rad/s)">gz</data>
+    </set>
+    <set name="Pending correction samples">
+      <data name="Time (s)">b_t</data>
+      <data name="Reading (selected sensor units)">b_a</data>
+    </set>
+    <set name="Motion samples">
+      <data name="Time (s)">m_t</data>
+      <data name="Time from first included sample (s)">elapsed_t</data>
+      <data name="Raw (selected sensor units)">m_a</data>
+      <data name="Corrected (selected sensor units)">corrected</data>
+    </set>
+    <set name="Linear motion">
+      <data name="Time (s)">acc_result_t</data>
+      <data name="Velocity (m/s)">velocity_export</data>
+      <data name="Displacement (m)">displacement</data>
+      <data name="Distance along axis (m)">distance</data>
+    </set>
+    <set name="Angular motion">
+      <data name="Time (s)">gyro_result_t</data>
+      <data name="Angle (rad)">angle_export</data>
+    </set>
+    <set name="Settings">
+      <data name="Sensor (1=with g 2=gyro 3=without g)">sensor_choice</data>
+      <data name="Axis (1=X 2=Y 3=Z)">axis</data>
+      <data name="Applied correction sensor-axis code">cal_choice</data>
+      <data name="Correction interval start (s)">cal_start</data>
+      <data name="Correction interval end (s)">cal_end</data>
+      <data name="Correction samples">cal_n</data>
+      <data name="Applied correction (sensor units)">applied_correction</data>
+      <data name="Correction valid (1=yes)">bias_valid</data>
+      <data name="Correction mode (0=none 1=calculated 2=removed)">correction_mode</data>
+      <data name="Recorded rate (Hz)">recorded_rate</data>
+      <data name="Analysis window duration (s)">window_duration</data>
+      <data name="Motion first sample (s)">m_start</data>
+      <data name="Motion last sample (s)">m_end</data>
+      <data name="Motion samples">m_n</data>
+      <data name="Initial velocity (m/s; ignored for gyro)">v0</data>
+      <data name="Results valid (1=yes)">valid</data>
+    </set>
+  </export>
+</phyphox>
